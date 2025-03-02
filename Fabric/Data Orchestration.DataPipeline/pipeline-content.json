@@ -1,0 +1,629 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            },
+            "additionalColumns": [
+              {
+                "name": "AccountName",
+                "value": {
+                  "value": "@activity('GetFileName').output.firstRow.AccountName",
+                  "type": "Expression"
+                }
+              }
+            ],
+            "datasetSettings": {
+              "type": "DelimitedText",
+              "typeProperties": {
+                "location": {
+                  "type": "AzureBlobFSLocation",
+                  "fileSystem": "landing",
+                  "fileName": {
+                    "value": "@variables('FileName')",
+                    "type": "Expression"
+                  }
+                },
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "escapeChar": "\\",
+                "firstRowAsHeader": true
+              },
+              "schema": [],
+              "externalReferences": {
+                "connection": "b119800c-6ba9-4814-ada0-7ae44e07e8fa"
+              },
+              "annotations": []
+            }
+          },
+          "sink": {
+            "type": "LakehouseTableSink",
+            "tableActionOption": "OverwriteSchema",
+            "partitionOption": "None",
+            "datasetSettings": {
+              "type": "LakehouseTable",
+              "typeProperties": {
+                "table": {
+                  "value": "@pipeline().parameters.TableName",
+                  "type": "Expression"
+                }
+              },
+              "schema": [],
+              "linkedService": {
+                "properties": {
+                  "type": "Lakehouse",
+                  "typeProperties": {
+                    "artifactId": "101997dd-da93-43bf-8dea-546b82e47d71",
+                    "workspaceId": "00000000-0000-0000-0000-000000000000",
+                    "rootFolder": "Tables"
+                  },
+                  "annotations": []
+                },
+                "name": "Processed"
+              },
+              "annotations": []
+            }
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          },
+          "enableStaging": false
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Copy CSV Data",
+        "dependsOn": [
+          {
+            "activity": "set FileName",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "GetFileName",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Delete",
+        "typeProperties": {
+          "enableLogging": true,
+          "logStorageSettings": {
+            "externalReferences": {
+              "connection": "b119800c-6ba9-4814-ada0-7ae44e07e8fa"
+            },
+            "path": "logs"
+          },
+          "datasetSettings": {
+            "type": "Binary",
+            "typeProperties": {
+              "location": {
+                "type": "AzureBlobFSLocation",
+                "fileSystem": "landing",
+                "fileName": {
+                  "value": "@pipeline()?.TriggerEvent?.FileName",
+                  "type": "Expression"
+                }
+              }
+            },
+            "externalReferences": {
+              "connection": "b119800c-6ba9-4814-ada0-7ae44e07e8fa"
+            },
+            "annotations": []
+          },
+          "storeSettings": {
+            "type": "AzureBlobFSReadSettings",
+            "recursive": false,
+            "enablePartitionDiscovery": false
+          }
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Delete loaded data",
+        "dependsOn": [
+          {
+            "activity": "Copy CSV Data",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "92019c27-cc7b-4b9d-ab12-77120b5bcda3",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
+        "policy": {
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Transaction Categoriser",
+        "dependsOn": [
+          {
+            "activity": "Delete loaded data",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "Copy_xl1",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "RefreshDataflow",
+        "typeProperties": {
+          "dataflowId": "d2108ac8-f4c3-4c1c-8411-8781bd27e5ed",
+          "workspaceId": "c68641a8-4de4-4f57-aa3b-58574fb9c68d",
+          "notifyOption": "NoNotification"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Ingest to Datawarehouse",
+        "dependsOn": [
+          {
+            "activity": "Transaction Categoriser",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "DataWarehouseSource",
+            "partitionOption": "None",
+            "datasetSettings": {
+              "type": "DataWarehouseTable",
+              "typeProperties": {
+                "schema": "dbo",
+                "table": "Transaction"
+              },
+              "schema": [],
+              "linkedService": {
+                "properties": {
+                  "type": "DataWarehouse",
+                  "typeProperties": {
+                    "artifactId": "5d681bbd-126d-403e-82cc-362c10c782b4",
+                    "endpoint": "4rnsydkpbj5ebnfr7gu3qzcu6e-vbaynrxejvlu7kr3lblu7oogru.datawarehouse.fabric.microsoft.com",
+                    "workspaceId": "c68641a8-4de4-4f57-aa3b-58574fb9c68d"
+                  },
+                  "annotations": []
+                },
+                "name": "WealthOptimizerWarehouse"
+              },
+              "annotations": []
+            }
+          },
+          "sink": {
+            "type": "LakehouseTableSink",
+            "tableActionOption": "OverwriteSchema",
+            "partitionOption": "None",
+            "datasetSettings": {
+              "type": "LakehouseTable",
+              "typeProperties": {
+                "table": "TraningData"
+              },
+              "schema": [],
+              "linkedService": {
+                "properties": {
+                  "type": "Lakehouse",
+                  "typeProperties": {
+                    "artifactId": "be2bb30e-55f7-4334-abd5-d7e59b417dc4",
+                    "workspaceId": "c68641a8-4de4-4f57-aa3b-58574fb9c68d",
+                    "rootFolder": "Tables"
+                  },
+                  "annotations": []
+                },
+                "name": "Processed"
+              },
+              "annotations": []
+            }
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "mappings": [
+              {
+                "source": {
+                  "name": "transactionId",
+                  "type": "String",
+                  "physicalType": "varchar",
+                  "length": "8000"
+                },
+                "sink": {
+                  "name": "transactionId",
+                  "physicalType": "string"
+                }
+              },
+              {
+                "source": {
+                  "name": "Date",
+                  "type": "DateTime",
+                  "physicalType": "date"
+                },
+                "sink": {
+                  "name": "Date",
+                  "physicalType": "date"
+                }
+              },
+              {
+                "source": {
+                  "name": "Description",
+                  "type": "String",
+                  "physicalType": "varchar",
+                  "length": "8000"
+                },
+                "sink": {
+                  "name": "Description",
+                  "physicalType": "string"
+                }
+              },
+              {
+                "source": {
+                  "name": "Amount",
+                  "type": "Double",
+                  "physicalType": "float"
+                },
+                "sink": {
+                  "name": "Amount",
+                  "physicalType": "double"
+                }
+              },
+              {
+                "source": {
+                  "name": "Category",
+                  "type": "String",
+                  "physicalType": "varchar",
+                  "length": "8000"
+                },
+                "sink": {
+                  "name": "Category",
+                  "physicalType": "string"
+                }
+              },
+              {
+                "source": {
+                  "name": "Month",
+                  "type": "String",
+                  "physicalType": "varchar",
+                  "length": "8000"
+                },
+                "sink": {
+                  "name": "Month",
+                  "physicalType": "string"
+                }
+              },
+              {
+                "source": {
+                  "name": "Year",
+                  "type": "Double",
+                  "physicalType": "float"
+                },
+                "sink": {
+                  "name": "Year",
+                  "physicalType": "double"
+                }
+              },
+              {
+                "source": {
+                  "name": "Quarter",
+                  "type": "Double",
+                  "physicalType": "float"
+                },
+                "sink": {
+                  "name": "Quarter",
+                  "physicalType": "double"
+                }
+              },
+              {
+                "source": {
+                  "name": "Week",
+                  "type": "Double",
+                  "physicalType": "float"
+                },
+                "sink": {
+                  "name": "Week",
+                  "physicalType": "double"
+                }
+              },
+              {
+                "source": {
+                  "name": "LastUpdatedDateTime",
+                  "type": "DateTime",
+                  "physicalType": "date"
+                },
+                "sink": {
+                  "name": "LastUpdatedDateTime",
+                  "physicalType": "date"
+                }
+              }
+            ],
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          },
+          "enableStaging": false
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Copy_xl1",
+        "state": "Inactive",
+        "onInactiveMarkAs": "Succeeded",
+        "dependsOn": []
+      },
+      {
+        "type": "Lookup",
+        "typeProperties": {
+          "source": {
+            "type": "DataWarehouseSource",
+            "sqlReaderQuery": "SELECT top 1 [FileName],[AccountName]\n   \n  FROM [dbo].[UploadedFile] \n  WHERE ProcessingStatus='SCHEDULED'\n  ORDER BY [LastUpdatedDateTime] DESC",
+            "partitionOption": "None",
+            "queryTimeout": "02:00:00"
+          },
+          "datasetSettings": {
+            "type": "DataWarehouseTable",
+            "schema": [],
+            "linkedService": {
+              "properties": {
+                "type": "DataWarehouse",
+                "typeProperties": {
+                  "artifactId": "5d681bbd-126d-403e-82cc-362c10c782b4",
+                  "endpoint": "4rnsydkpbj5ebnfr7gu3qzcu6e-vbaynrxejvlu7kr3lblu7oogru.datawarehouse.fabric.microsoft.com",
+                  "workspaceId": "c68641a8-4de4-4f57-aa3b-58574fb9c68d"
+                },
+                "annotations": []
+              },
+              "name": "WealthOptimizerWarehouse"
+            },
+            "annotations": []
+          }
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "GetFileName",
+        "dependsOn": []
+      },
+      {
+        "type": "Script",
+        "typeProperties": {
+          "scripts": [
+            {
+              "text": {
+                "value": "@concat('UPDATE [dbo].[UploadedFile] SET ProcessingStatus=''COMPLETED'' WHERE [FileName]=''',variables('FileName'),'''')",
+                "type": "Expression"
+              },
+              "type": "NonQuery"
+            }
+          ]
+        },
+        "linkedService": {
+          "properties": {
+            "type": "DataWarehouse",
+            "typeProperties": {
+              "artifactId": "5d681bbd-126d-403e-82cc-362c10c782b4",
+              "endpoint": "4rnsydkpbj5ebnfr7gu3qzcu6e-vbaynrxejvlu7kr3lblu7oogru.datawarehouse.fabric.microsoft.com",
+              "workspaceId": "c68641a8-4de4-4f57-aa3b-58574fb9c68d"
+            },
+            "annotations": []
+          },
+          "name": "WealthOptimizerWarehouse",
+          "objectId": "5d681bbd-126d-403e-82cc-362c10c782b4"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Update Status - Success",
+        "dependsOn": [
+          {
+            "activity": "Ingest to Datawarehouse",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Script",
+        "typeProperties": {
+          "scripts": [
+            {
+              "text": {
+                "value": "@concat('UPDATE [dbo].[UploadedFile] SET ProcessingStatus=''FAILED'' WHERE [FileName]=''',variables('FileName'),'''')",
+                "type": "Expression"
+              },
+              "type": "NonQuery"
+            }
+          ]
+        },
+        "linkedService": {
+          "properties": {
+            "type": "DataWarehouse",
+            "typeProperties": {
+              "artifactId": "5d681bbd-126d-403e-82cc-362c10c782b4",
+              "endpoint": "4rnsydkpbj5ebnfr7gu3qzcu6e-vbaynrxejvlu7kr3lblu7oogru.datawarehouse.fabric.microsoft.com",
+              "workspaceId": "c68641a8-4de4-4f57-aa3b-58574fb9c68d"
+            },
+            "annotations": []
+          },
+          "name": "WealthOptimizerWarehouse",
+          "objectId": "5d681bbd-126d-403e-82cc-362c10c782b4"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Update Status - Failed",
+        "dependsOn": [
+          {
+            "activity": "Ingest to Datawarehouse",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          },
+          {
+            "activity": "Transaction Categoriser",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          },
+          {
+            "activity": "Delete loaded data",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          },
+          {
+            "activity": "Copy CSV Data",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          },
+          {
+            "activity": "GetFileName",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Script",
+        "typeProperties": {
+          "scripts": [
+            {
+              "text": {
+                "value": "@concat('UPDATE [dbo].[UploadedFile] SET ProcessingStatus=''IN PROGRESS'' WHERE [FileName]=''',variables('FileName'),'''')",
+                "type": "Expression"
+              },
+              "type": "Query"
+            }
+          ]
+        },
+        "linkedService": {
+          "properties": {
+            "type": "DataWarehouse",
+            "typeProperties": {
+              "artifactId": "5d681bbd-126d-403e-82cc-362c10c782b4",
+              "endpoint": "4rnsydkpbj5ebnfr7gu3qzcu6e-vbaynrxejvlu7kr3lblu7oogru.datawarehouse.fabric.microsoft.com",
+              "workspaceId": "c68641a8-4de4-4f57-aa3b-58574fb9c68d"
+            },
+            "annotations": []
+          },
+          "name": "WealthOptimizerWarehouse",
+          "objectId": "5d681bbd-126d-403e-82cc-362c10c782b4"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Update Status - in_progress",
+        "dependsOn": [
+          {
+            "activity": "set FileName",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "SetVariable",
+        "typeProperties": {
+          "variableName": "FileName",
+          "value": {
+            "value": "@activity('GetFileName').output.firstRow.FileName",
+            "type": "Expression"
+          }
+        },
+        "policy": {
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "set FileName",
+        "dependsOn": [
+          {
+            "activity": "GetFileName",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      }
+    ],
+    "parameters": {
+      "TableName": {
+        "type": "string",
+        "defaultValue": "ProcessedCSV"
+      }
+    },
+    "variables": {
+      "FileName": {
+        "type": "String"
+      }
+    }
+  }
+}

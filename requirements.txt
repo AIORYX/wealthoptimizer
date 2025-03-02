@@ -1,0 +1,14 @@
+streamlit
+pandas
+pyodbc
+msal
+plotly.express
+streamlit-aggrid 
+sqlalchemy
+matplotlib
+seaborn
+azure-storage-blob
+python-dotenv
+streamlit-navigation-bar
+streamlit-oauth
+authlib

@@ -1,0 +1,298 @@
+{
+  "compatibilityLevel": 1567,
+  "model": {
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"DirectQuery to AS - WealthOptimizerWarehouse\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "1"
+      },
+      {
+        "name": "PBIDesktopVersion",
+        "value": "2.132.1053.0 (24.08)"
+      }
+    ],
+    "culture": "en-US",
+    "cultures": [
+      {
+        "name": "en-US",
+        "linguisticMetadata": {
+          "content": {
+            "Language": "en-US",
+            "Version": "1.0.0"
+          },
+          "contentType": "json"
+        }
+      }
+    ],
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "expressions": [
+      {
+        "name": "DirectQuery to AS - WealthOptimizerWarehouse",
+        "annotations": [
+          {
+            "name": "PBI_IncludeFutureArtifacts",
+            "value": "True"
+          }
+        ],
+        "expression": [
+          "let",
+          "    Source = AnalysisServices.Database(\"powerbi://api.powerbi.com/v1.0/myorg/WealthOptimizerWS\", \"WealthOptimizerWarehouse\"),",
+          "    Cubes = Table.Combine(Source[Data]),",
+          "    Cube = Cubes{[Id=\"8b58adc5-3869-4bf9-86eb-d68b072e8425\", Kind=\"Cube\"]}[Data]",
+          "in",
+          "    Cube"
+        ],
+        "kind": "m",
+        "lineageTag": "0f7fc74a-31a6-4727-8fa3-721f6abdf482"
+      }
+    ],
+    "sourceQueryCulture": "en-AU",
+    "tables": [
+      {
+        "name": "Transaction",
+        "annotations": [
+          {
+            "name": "PBI_NavigationStepName",
+            "value": "Navigation"
+          },
+          {
+            "name": "PBI_ResultType",
+            "value": "Exception"
+          }
+        ],
+        "changedProperties": [
+          {
+            "property": "Name"
+          }
+        ],
+        "columns": [
+          {
+            "name": "Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isCustom\":true}"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "FormatString"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "dateTime",
+            "formatString": "yyyy/mm/dd",
+            "lineageTag": "6e46348d-2af6-423f-bc10-f97e330588ce",
+            "sourceColumn": "Date",
+            "sourceLineageTag": "6a463edc-3b03-4c70-82e3-fc82185ae3ee",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Description",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "string",
+            "lineageTag": "b758381a-c4ec-464f-ab57-4e78d9f8c34a",
+            "sourceColumn": "Description",
+            "sourceLineageTag": "dd3d4e88-f2d5-40fa-8b46-9e8f7b8f7aa7",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Amount",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "double",
+            "lineageTag": "f71b33df-ba53-4c4d-bf9a-2dd08446db9f",
+            "sourceColumn": "Amount",
+            "sourceLineageTag": "695c3c86-c2e9-4c20-a418-622d8f8849c2",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Category",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "string",
+            "lineageTag": "eb65097c-cf56-433e-a218-edaa7f6e144d",
+            "sourceColumn": "Category",
+            "sourceLineageTag": "e26409c3-c586-4627-84fd-30b380f7a93d",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Month",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "string",
+            "lineageTag": "f43d478c-9001-43ff-8b16-ddc92e6f59a4",
+            "sourceColumn": "Month",
+            "sourceLineageTag": "01714335-174d-4bec-9f9f-0e1ebcc6d27e",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Year",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "FormatString"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "double",
+            "formatString": "0",
+            "lineageTag": "9a84c31d-e975-4a1d-b5be-03df1d376a74",
+            "sourceColumn": "Year",
+            "sourceLineageTag": "bd623f6e-e238-431f-9bf3-d3a0c0ba50d9",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Quarter",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "double",
+            "lineageTag": "2ffdb813-c012-4185-b9c4-dc72798fb427",
+            "sourceColumn": "Quarter",
+            "sourceLineageTag": "506ae8f8-0124-43f7-b973-c9581999c82c",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Week",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ],
+            "dataCategory": "Uncategorized",
+            "dataType": "double",
+            "lineageTag": "c1f0d215-e3a0-4dd3-9bff-8d034fbdb205",
+            "sourceColumn": "Week",
+            "sourceLineageTag": "bcc6d6fb-7906-4a12-bcd2-a067773cd8b2",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PositiveAmount",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "Name"
+              }
+            ],
+            "dataType": "double",
+            "expression": "'Transaction'[Amount]*-1 ",
+            "isDataTypeInferred": true,
+            "lineageTag": "e72e0b90-d849-41fe-beef-b358db9a1d25",
+            "summarizeBy": "sum",
+            "type": "calculated"
+          }
+        ],
+        "hierarchies": [
+          {
+            "name": "Category Hierarchy",
+            "levels": [
+              {
+                "name": "Category",
+                "column": "Category",
+                "lineageTag": "15423ff3-21ac-4023-acfb-791a0f1c4bc5",
+                "ordinal": 0
+              },
+              {
+                "name": "Year",
+                "column": "Year",
+                "lineageTag": "3712509c-a4d7-4200-957a-b951ed2fa319",
+                "ordinal": 1
+              },
+              {
+                "name": "Month",
+                "column": "Month",
+                "lineageTag": "3ad07074-25bf-4ca4-baed-0cbabe3f9477",
+                "ordinal": 2
+              },
+              {
+                "name": "Description",
+                "column": "Description",
+                "lineageTag": "1bc26969-9e6c-4ed5-9a9d-9245bbd07b32",
+                "ordinal": 3
+              }
+            ],
+            "lineageTag": "6b945a53-0c73-4f7d-8a38-56d6df4dfe34"
+          }
+        ],
+        "lineageTag": "9a379110-f652-4e6c-aaa4-ccd03ed6f447",
+        "partitions": [
+          {
+            "name": "Transaction",
+            "mode": "directQuery",
+            "source": {
+              "entityName": "Transaction",
+              "expressionSource": "DirectQuery to AS - WealthOptimizerWarehouse",
+              "type": "entity"
+            }
+          }
+        ],
+        "sourceLineageTag": "28ac2667-c37f-4bbc-a8b2-d0aee81f4b9d"
+      }
+    ]
+  }
+}

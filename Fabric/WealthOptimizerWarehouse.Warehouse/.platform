@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Warehouse",
+    "displayName": "WealthOptimizerWarehouse"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "9d9bbe60-f5c9-4d62-b63e-e8eb01e9757c"
+  }
+}
